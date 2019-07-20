@@ -7,7 +7,8 @@ use Encode;
 
 my $verbose;
 my $contacts_xml;
-my @contacts;
+my $dir='.';
+my %contacts;
 
 sub vprint {
     print("$_[0]\n") if $verbose;
@@ -26,25 +27,78 @@ sub parse_options {
         print STDERR "Argument 'contacts_xml' is mandatory\n\n";
         pod2usage(2);
     }
+    if (defined $ARGV[0]) {
+        $dir = $ARGV[0];
+    }
 }
 
 sub parse_contacts_xml {
     my $dom = XML::LibXML->load_xml(location => $contacts_xml);
-    @contacts = $dom->findnodes('//contact');
+    my @contacts_array = $dom->findnodes('//contact');
 
-    vprint "Found " . scalar @contacts . " contacts";
+    vprint "Found " . scalar @contacts_array . " contacts";
 
-    foreach my $contact (@contacts) {
+    vvprint "Contacts in contacts.ini:";
+    foreach my $contact (@contacts_array) {
         my $id = $contact->findvalue('./@id');
         my $name = Encode::encode("UTF-8", $contact->findvalue('./@name'));
-        vvprint "$id: $name";
+        vvprint "  $id: $name";
+        $contacts{$id} = $name;
     }
 }
 
-parse_options();
-vprint "Starting...";
-parse_contacts_xml();
+sub contact_name_by_id {
+    my ($id, %local_contacts) = @_;
+    my $local_name = $local_contacts{$id};
+    if (defined $local_name) {
+        return $local_name;
+    } else {
+        return $contacts{$id};
+    }
+}
 
+sub read_picasa_ini {
+    my $picasa_ini = "$_[0]/.picasa.ini";
+    my $in_contacts = '';
+    my $file_name;
+    my %local_contacts;
+    my $faces = 0;
+    vprint "Processing $picasa_ini";
+    open (my $fh_picasa_ini, '<', $picasa_ini) || die "Unable to open $picasa_ini file";
+    while (<$fh_picasa_ini>) {
+        if ($_ =~ /\[Contacts2\]/) {
+            $in_contacts = 1;
+        } elsif ($in_contacts && $_ =~ /(.*)=([^;]*);/) {
+            vvprint "  Found local contact in file $picasa_ini: $1 $2";
+            $local_contacts{$1} = $2;
+        } elsif ($_ =~ /\[(.*)\]/) {
+            $in_contacts = 0;
+            $file_name = $1;
+        } elsif ($_ =~ /faces=rect64\((.{4})(.{4})(.{4})(.{4})\),([[:xdigit:]]*)/) {
+            my $left = hex ($1) / (1<<16);
+            my $top = hex ($2) / (1<<16);
+            my $right = hex ($3) / (1<<16);
+            my $bottom = hex ($4) / (1<<16);
+            my $name = contact_name_by_id ($5, %local_contacts);
+            vvprint ("  Found face for $name in $file_name");
+            ++$faces;
+        } else {
+#            print "$_\n";
+        }
+    }
+    close ($fh_picasa_ini);
+    vprint "Found $faces faces in $picasa_ini";
+
+#    foreach my $id (keys %local_contacts) {
+#        vprint "zzz $id " . $local_contacts{$id};
+#    }
+}
+
+
+parse_options();
+vprint "Starting... $dir";
+parse_contacts_xml();
+read_picasa_ini $dir;
 __END__
 
 =head1 NAME
@@ -53,7 +107,7 @@ picasa2xmp - converts picasa contacts information to xmp
 
 =head1 SYNOPSIS
 
-picasa2xmp.pl [options] --contacts_xml picasa_contacts.xml
+picasa2xmp.pl [options] --contacts_xml picasa_contacts.xml DIRECTORY
 
 Options:
 
