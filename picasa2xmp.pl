@@ -65,6 +65,7 @@ sub read_picasa_ini {
     my $faces = 0;
     vprint "Processing $picasa_ini";
     open (my $fh_picasa_ini, '<', $picasa_ini) || die "Unable to open $picasa_ini file";
+
     while (<$fh_picasa_ini>) {
         if ($_ =~ /\[Contacts2\]/) {
             $in_contacts = 1;
@@ -74,14 +75,18 @@ sub read_picasa_ini {
         } elsif ($_ =~ /\[(.*)\]/) {
             $in_contacts = 0;
             $file_name = $1;
-        } elsif ($_ =~ /faces=rect64\((.{4})(.{4})(.{4})(.{4})\),([[:xdigit:]]*)/) {
-            my $left = hex ($1) / (1<<16);
-            my $top = hex ($2) / (1<<16);
-            my $right = hex ($3) / (1<<16);
-            my $bottom = hex ($4) / (1<<16);
-            my $name = contact_name_by_id ($5, %local_contacts);
-            vvprint ("  Found face for $name in $file_name");
-            ++$faces;
+        } elsif ($_ =~ /faces=(.*)/) {
+            my $faces_str = $1;
+            while ($faces_str =~ /rect64\((.{4})(.{4})(.{4})(.{4})\),([[:xdigit:]]*)(.*)/) {
+                my $left = hex ($1) / (1<<16);
+                my $top = hex ($2) / (1<<16);
+                my $right = hex ($3) / (1<<16);
+                my $bottom = hex ($4) / (1<<16);
+                my $name = contact_name_by_id ($5, %local_contacts);
+                vvprint ("  Found face for $name in $file_name");
+                ++$faces;
+                $faces_str = $6;
+            }
         } else {
 #            print "$_\n";
         }
