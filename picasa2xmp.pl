@@ -2,17 +2,24 @@
 use strict;
 use Getopt::Long;
 use Pod::Usage;
+use XML::LibXML;
+use Encode;
 
-my $verbose = '';
+my $verbose;
 my $contacts_xml;
+my @contacts;
 
 sub vprint {
     print("$_[0]\n") if $verbose;
 }
 
+sub vvprint {
+    print("$_[0]\n") if $verbose>1;
+}
+
 sub parse_options {
     GetOptions ("contacts_xml=s" => \$contacts_xml,
-                'verbose' => \$verbose)
+                'verbose+' => \$verbose)
         || pod2usage(2);
 
     if (not defined $contacts_xml) {
@@ -21,8 +28,22 @@ sub parse_options {
     }
 }
 
+sub parse_contacts_xml {
+    my $dom = XML::LibXML->load_xml(location => $contacts_xml);
+    @contacts = $dom->findnodes('//contact');
+
+    vprint "Found " . scalar @contacts . " contacts";
+
+    foreach my $contact (@contacts) {
+        my $id = $contact->findvalue('./@id');
+        my $name = Encode::encode("UTF-8", $contact->findvalue('./@name'));
+        vvprint "$id: $name";
+    }
+}
+
 parse_options();
 vprint "Starting...";
+parse_contacts_xml();
 
 __END__
 
