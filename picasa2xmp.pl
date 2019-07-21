@@ -80,7 +80,7 @@ sub create_acdsee_xml {
 sub add_face_info {
     my ($file, @names) = @_;
     vprint "Adding " . (scalar @names) . " faces to $file";
-    my $et = new Image::ExifTool;
+    my $et = Image::ExifTool->new;
     my @people_slash;
     my @people_pipe;
     foreach my $name (@names) {
@@ -132,19 +132,13 @@ sub read_picasa_ini {
                 ++$faces;
                 $faces_str = $6;
             }
-        } else {
-#            print "$_\n";
         }
     }
+    close ($fh_picasa_ini);
     if (scalar @names>0) {
         add_face_info($file_name, @names);
     }
-    close ($fh_picasa_ini);
     vprint "Found $faces faces in $picasa_ini";
-
-#    foreach my $id (keys %local_contacts) {
-#        vprint "zzz $id " . $local_contacts{$id};
-#    }
 }
 
 
