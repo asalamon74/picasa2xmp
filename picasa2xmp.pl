@@ -4,6 +4,7 @@ use Getopt::Long;
 use Pod::Usage;
 use XML::LibXML;
 use Encode;
+use Image::ExifTool;
 
 my $verbose;
 my $contacts_xml;
@@ -57,12 +58,25 @@ sub contact_name_by_id {
     }
 }
 
+sub add_face_info {
+    my ($file, @names) = @_;
+    vprint "Adding " . (scalar @names) . " faces to $file";
+    my $et = new Image::ExifTool;
+    my @people_slash;
+    foreach my $name (@names) {
+        push @people_slash, "People/$name";
+    }
+    $et->SetNewValue(LastKeywordXMP => \@people_slash);
+    $et->WriteInfo($file);
+}
+
 sub read_picasa_ini {
     my $picasa_ini = "$_[0]/.picasa.ini";
     my $in_contacts = '';
     my $file_name;
     my %local_contacts;
     my $faces = 0;
+    my @names;
     vprint "Processing $picasa_ini";
     open (my $fh_picasa_ini, '<', $picasa_ini) || die "Unable to open $picasa_ini file";
 
@@ -73,6 +87,10 @@ sub read_picasa_ini {
             vvprint "  Found local contact in file $picasa_ini: $1 $2";
             $local_contacts{$1} = $2;
         } elsif ($_ =~ /\[(.*)\]/) {
+            if (scalar @names>0) {
+                add_face_info($file_name, @names);
+                @names = ();
+            }
             $in_contacts = 0;
             $file_name = $1;
         } elsif ($_ =~ /faces=(.*)/) {
@@ -84,12 +102,16 @@ sub read_picasa_ini {
                 my $bottom = hex ($4) / (1<<16);
                 my $name = contact_name_by_id ($5, %local_contacts);
                 vvprint ("  Found face for $name in $file_name");
+                push @names, $name;
                 ++$faces;
                 $faces_str = $6;
             }
         } else {
 #            print "$_\n";
         }
+    }
+    if (scalar @names>0) {
+        add_face_info($file_name, @names);
     }
     close ($fh_picasa_ini);
     vprint "Found $faces faces in $picasa_ini";
