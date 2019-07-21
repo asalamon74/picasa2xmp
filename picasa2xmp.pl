@@ -7,7 +7,7 @@ use XML::LibXML;
 use Encode;
 use Image::ExifTool;
 
-my $verbose;
+my $verbose=0;
 my $contacts_xml;
 my $dir='.';
 my %contacts;
