@@ -7,6 +7,8 @@ use XML::LibXML;
 use Encode;
 use Image::ExifTool;
 
+Getopt::Long::Configure qw(gnu_getopt);
+
 my $verbose=0;
 my $contacts_xml;
 my $dir='.';
@@ -21,8 +23,8 @@ sub vvprint {
 }
 
 sub parse_options {
-    GetOptions ("contacts_xml=s" => \$contacts_xml,
-                'verbose+' => \$verbose)
+    GetOptions ("c|contacts_xml=s" => \$contacts_xml,
+                'v|verbose+' => \$verbose)
         || pod2usage(2);
 
     if (not defined $contacts_xml) {
