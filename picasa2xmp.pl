@@ -59,15 +59,40 @@ sub contact_name_by_id {
     }
 }
 
+sub create_acdsee_xml {
+    my @names = @_;
+    my $doc = XML::LibXML::Document->new('1.0', 'utf-8');
+    my $root = $doc->createElement("Categories");
+    my $category = $doc->createElement("Category");
+    $category->setAttribute("Assigned" => "0");
+    $category->appendTextNode("People");
+    $root->appendChild($category);
+    foreach my $name (@names) {
+        my $sub_category = $doc->createElement("Category");
+        $sub_category->setAttribute("Assigned" => "1");
+        $sub_category->appendTextNode($name);
+        $category->appendChild($sub_category);
+    }
+    $doc->setDocumentElement($root);
+    return $root->toString();
+}
+
 sub add_face_info {
     my ($file, @names) = @_;
     vprint "Adding " . (scalar @names) . " faces to $file";
     my $et = new Image::ExifTool;
     my @people_slash;
+    my @people_pipe;
     foreach my $name (@names) {
         push @people_slash, "People/$name";
+        push @people_pipe, "People|$name";
     }
     $et->SetNewValue(LastKeywordXMP => \@people_slash);
+    $et->SetNewValue(TagsList => \@people_slash);
+    $et->SetNewValue(hierarchicalSubject => \@people_pipe);
+    $et->SetNewValue(CatalogSets => \@people_pipe);
+    $et->SetNewValue(subject => \@names);
+    $et->SetNewValue(categories => create_acdsee_xml(@names));
     $et->WriteInfo($file);
 }
 
