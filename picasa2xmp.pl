@@ -11,6 +11,7 @@ Getopt::Long::Configure qw(gnu_getopt);
 
 my $verbose=0;
 my $contacts_xml;
+my $dry_run=0;
 my $dir='.';
 my %contacts;
 
@@ -24,7 +25,8 @@ sub vvprint {
 
 sub parse_options {
     GetOptions ("c|contacts_xml=s" => \$contacts_xml,
-                'v|verbose+' => \$verbose)
+                'v|verbose+' => \$verbose,
+                'n|dry-run' => \$dry_run)
         || pod2usage(2);
 
     if (not defined $contacts_xml) {
@@ -82,6 +84,9 @@ sub create_acdsee_xml {
 sub add_face_info {
     my ($file, @names) = @_;
     vprint "Adding " . (scalar @names) . " faces to $file";
+    if ($dry_run) {
+        return;
+    }
     my $et = Image::ExifTool->new;
     my @people_slash;
     my @people_pipe;
@@ -161,6 +166,7 @@ picasa2xmp.pl [options] --contacts_xml picasa_contacts.xml DIRECTORY
 Options:
 
     -verbose    turn on verbose mode
+    --dry-run    perform a trial run with no changes
 
 =head1 OPTIONS
 
