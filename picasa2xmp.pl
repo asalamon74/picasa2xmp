@@ -24,7 +24,7 @@ sub vvprint {
 }
 
 sub parse_options {
-    GetOptions ("c|contacts_xml=s" => \$contacts_xml,
+    GetOptions ("c|contacts-xml=s" => \$contacts_xml,
                 'v|verbose+' => \$verbose,
                 'n|dry-run' => \$dry_run)
         || pod2usage(2);
@@ -161,11 +161,11 @@ picasa2xmp - converts picasa contacts information to xmp
 
 =head1 SYNOPSIS
 
-picasa2xmp.pl [options] --contacts_xml picasa_contacts.xml DIRECTORY
+picasa2xmp.pl [options] --contacts-xml picasa_contacts.xml DIRECTORY
 
 Options:
 
-    -verbose    turn on verbose mode
+    --verbose    turn on verbose mode
     --dry-run    perform a trial run with no changes
 
 =head1 OPTIONS
