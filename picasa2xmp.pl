@@ -6,6 +6,8 @@ use Pod::Usage;
 use XML::LibXML;
 use Encode;
 use Image::ExifTool;
+use File::Find::Rule;
+use File::Basename;
 
 Getopt::Long::Configure qw(gnu_getopt);
 
@@ -56,7 +58,9 @@ sub parse_contacts_xml {
 sub contact_name_by_id {
     my ($id, %local_contacts) = @_;
     my $local_name = $local_contacts{$id};
-    if (defined $local_name) {
+    if ($id eq 'ffffffffffffffff') {
+        return 'UNKNOWN';
+    } elsif (defined $local_name) {
         return $local_name;
     } else {
         return $contacts{$id};
@@ -82,10 +86,18 @@ sub create_acdsee_xml {
 }
 
 sub add_face_info {
-    my ($file, @names) = @_;
-    vprint "Adding " . (scalar @names) . " faces to $file";
+    my ($dir_name, $file, @names) = @_;
+    my $full_name = "$dir_name/$file";
+    my $success = 1;
+    my $extra_info = '';
+    if (! -e "$full_name") {
+        $success = 0;
+        $extra_info =  " - missing file";
+    }
+
+    vprint "Adding " . (scalar @names) . " faces to $full_name $extra_info";
     if ($dry_run) {
-        return;
+        return $success;
     }
     my $et = Image::ExifTool->new;
     my @people_slash;
@@ -100,15 +112,18 @@ sub add_face_info {
     $et->SetNewValue(CatalogSets => \@people_pipe);
     $et->SetNewValue(subject => \@names);
     $et->SetNewValue(categories => create_acdsee_xml(@names));
-    $et->WriteInfo($file);
+    $et->WriteInfo($full_name);
+    return $success;
 }
 
 sub read_picasa_ini {
-    my $picasa_ini = "$_[0]/.picasa.ini";
+    my ($picasa_ini) = @_;
+    my $dir_name = dirname($picasa_ini);
     my $in_contacts = '';
     my $file_name;
     my %local_contacts;
-    my $faces = 0;
+    my $faces_found = 0;
+    my $faces_written = 0;
     my @names;
     vprint "Processing $picasa_ini";
     open (my $fh_picasa_ini, '<', $picasa_ini) || die "Unable to open $picasa_ini file";
@@ -121,7 +136,7 @@ sub read_picasa_ini {
             $local_contacts{$1} = $2;
         } elsif ($_ =~ /\[(.*)\]/) {
             if (scalar @names>0) {
-                add_face_info($file_name, @names);
+                $faces_written += add_face_info($dir_name, $file_name, @names);
                 @names = ();
             }
             $in_contacts = 0;
@@ -136,23 +151,39 @@ sub read_picasa_ini {
                 my $name = contact_name_by_id ($5, %local_contacts);
                 vvprint ("  Found face for $name in $file_name");
                 push @names, $name;
-                ++$faces;
+                ++$faces_found;
                 $faces_str = $6;
             }
         }
     }
     close ($fh_picasa_ini);
     if (scalar @names>0) {
-        add_face_info($file_name, @names);
+        $faces_written += add_face_info($dir_name, $file_name, @names);
     }
-    vprint "Found $faces faces in $picasa_ini";
+    vprint "Found $faces_found faces in $picasa_ini, written $faces_written faces";
+    return ($faces_found, $faces_written);
+}
+
+sub main {
+    my ($dir) = @_;
+    my @files = File::Find::Rule->file()
+        ->name( '.picasa.ini' )
+        ->in( $dir );
+    my $total_faces_found = 0;
+    my $total_faces_written = 0;
+    foreach my $file (@files) {
+        my ($ff, $fw) = read_picasa_ini($file);
+        $total_faces_found += $ff;
+        $total_faces_written += $fw;
+    }
+    vprint "Total: Found $total_faces_found faces, written $total_faces_written faces";
 }
 
 
 parse_options();
-vprint "Starting... $dir";
+vprint "Starting processing $dir";
 parse_contacts_xml();
-read_picasa_ini $dir;
+main($dir);
 __END__
 
 =head1 NAME
