@@ -8,12 +8,14 @@ use Encode;
 use Image::ExifTool;
 use File::Find::Rule;
 use File::Basename;
+use File::stat;
 
 Getopt::Long::Configure qw(gnu_getopt);
 
 my $verbose=0;
 my $contacts_xml;
 my $dry_run=0;
+my $keep_time=0;
 my $dir='.';
 my %contacts;
 
@@ -28,7 +30,8 @@ sub vvprint {
 sub parse_options {
     GetOptions ("c|contacts-xml=s" => \$contacts_xml,
                 'v|verbose+' => \$verbose,
-                'n|dry-run' => \$dry_run)
+                'n|dry-run' => \$dry_run,
+                'k|keep-time' => \$keep_time)
         || pod2usage(2);
 
     if (not defined $contacts_xml) {
@@ -96,7 +99,7 @@ sub add_face_info {
     }
 
     vprint "Adding " . (scalar @names) . " faces to $full_name $extra_info";
-    if ($dry_run) {
+    if ($dry_run || !$success) {
         return $success;
     }
     my $et = Image::ExifTool->new;
@@ -112,7 +115,13 @@ sub add_face_info {
     $et->SetNewValue(CatalogSets => \@people_pipe);
     $et->SetNewValue(subject => \@names);
     $et->SetNewValue(categories => create_acdsee_xml(@names));
+
+    my $pre_atime = stat($full_name)->atime;
+    my $pre_mtime = stat($full_name)->mtime;
     $et->WriteInfo($full_name);
+    if ($keep_time) {
+        utime($pre_atime, $pre_mtime, $full_name);
+    }
     return $success;
 }
 
@@ -198,6 +207,7 @@ Options:
 
     --verbose    turn on verbose mode
     --dry-run    perform a trial run with no changes
+    --keep-time  keep the original dates of the files
 
 =head1 OPTIONS
 
