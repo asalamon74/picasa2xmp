@@ -89,7 +89,7 @@ sub create_acdsee_xml {
 }
 
 sub add_face_info {
-    my ($dir_name, $file, @names) = @_;
+    my ($dir_name, $file, @faces) = @_;
     my $full_name = "$dir_name/$file";
     my $success = 1;
     my $extra_info = '';
@@ -98,16 +98,29 @@ sub add_face_info {
         $extra_info =  " - missing file";
     }
 
-    vprint "Adding " . (scalar @names) . " faces to $full_name $extra_info";
+    my $face_num = scalar @faces;
+    vprint "Adding $face_num faces to $full_name $extra_info";
     if ($dry_run || !$success) {
-        return $success;
+        return $success * $face_num;
     }
     my $et = Image::ExifTool->new;
+    my @names;
     my @people_slash;
     my @people_pipe;
-    foreach my $name (@names) {
+    my @region_info;
+    for (my $i=0; $i<$face_num; ++$i) {
+        my $name = $faces[$i]{name};
+        my $left = $faces[$i]{left};
+        my $top = $faces[$i]{top};
+        my $right = $faces[$i]{right};
+        my $bottom = $faces[$i]{bottom};
+        my $width = $right - $left;
+        my $height = $bottom - $top;
+        push @names, "$name";
         push @people_slash, "People/$name";
         push @people_pipe, "People|$name";
+        push @region_info, {(Rectangle=>"$left,$top,$width,$height",
+                             PersonDisplayName => "$name")};
     }
     $et->SetNewValue(LastKeywordXMP => \@people_slash);
     $et->SetNewValue(TagsList => \@people_slash);
@@ -116,13 +129,16 @@ sub add_face_info {
     $et->SetNewValue(subject => \@names);
     $et->SetNewValue(categories => create_acdsee_xml(@names));
 
+    my %regions = ('Regions' => \@region_info);
+    $et->SetNewValue(RegionInfoMP => \%regions);
+
     my $pre_atime = stat($full_name)->atime;
     my $pre_mtime = stat($full_name)->mtime;
     $et->WriteInfo($full_name);
     if ($keep_time) {
         utime($pre_atime, $pre_mtime, $full_name);
     }
-    return $success;
+    return $success * $face_num;
 }
 
 sub read_picasa_ini {
@@ -158,8 +174,9 @@ sub read_picasa_ini {
                 my $right = hex ($3) / (1<<16);
                 my $bottom = hex ($4) / (1<<16);
                 my $name = contact_name_by_id ($5, %local_contacts);
+                my %face = (name => $name, left => $left, top => $top, right => $right, bottom => $bottom);
                 vvprint ("  Found face for $name in $file_name");
-                push @names, $name;
+                push @names, { %face };
                 ++$faces_found;
                 $faces_str = $6;
             }
