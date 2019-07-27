@@ -214,30 +214,33 @@ __END__
 
 =head1 NAME
 
-picasa2xmp - converts picasa contacts information to xmp
+picasa2xmp - converts picasa face / contact information to xmp
 
 =head1 SYNOPSIS
 
 picasa2xmp.pl [options] --contacts-xml picasa_contacts.xml DIRECTORY
 
-Options:
-
-    --verbose    turn on verbose mode
-    --dry-run    perform a trial run with no changes
-    --keep-time  keep the original dates of the files
-
 =head1 OPTIONS
 
 =over 4
 
-=item B<-verbose>
+=item B<--verbose>
 
     Turns on verbose mode, the program prints out more information.
+
+=item B<--dry-run>
+
+    Perform a trial run with no changes. Useful for testing.
+
+=item B<--keep-time>
+
+    Keep the original dates of the files.
 
 =back
 
 =head1 DESCRIPTION
 
-    picas2xmp reads the picasa contacts information and converts it to xmp tags.
+    picas2xmp reads the picasa face / contact information from .picasa.ini
+    and contact.xml files and converts it to xmp tags.
 
 =cut
