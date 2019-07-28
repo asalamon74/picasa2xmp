@@ -129,7 +129,7 @@ sub add_face_info {
     $et->SetNewValue(LastKeywordXMP => \@people_slash);
     $et->SetNewValue(TagsList => \@people_slash);
     $et->SetNewValue(hierarchicalSubject => \@people_pipe);
-    $et->SetNewValue(CatalogSets => \@people_pipe);
+    $et->SetNewValue('XMP:CatalogSets' => \@people_pipe);
     $et->SetNewValue(subject => \@names);
     $et->SetNewValue(categories => create_acdsee_xml(@names));
 
