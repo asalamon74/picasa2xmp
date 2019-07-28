@@ -107,6 +107,7 @@ sub add_face_info {
     my @names;
     my @people_slash;
     my @people_pipe;
+    my @region_info_mp;
     my @region_info;
     for (my $i=0; $i<$face_num; ++$i) {
         my $name = $faces[$i]{name};
@@ -119,8 +120,11 @@ sub add_face_info {
         push @names, "$name";
         push @people_slash, "People/$name";
         push @people_pipe, "People|$name";
-        push @region_info, {(Rectangle=>"$left,$top,$width,$height",
-                             PersonDisplayName => "$name")};
+        push @region_info_mp, {(Rectangle=>"$left,$top,$width,$height",
+                                PersonDisplayName => "$name")};
+        push @region_info, {(Name=>"$name",
+                             Type=>"Face",
+                             Area=>{(Unit=>"Normalized",X=>"$left",Y=>"$top",W=>"$width",H=>"$height")})};
     }
     $et->SetNewValue(LastKeywordXMP => \@people_slash);
     $et->SetNewValue(TagsList => \@people_slash);
@@ -129,8 +133,10 @@ sub add_face_info {
     $et->SetNewValue(subject => \@names);
     $et->SetNewValue(categories => create_acdsee_xml(@names));
 
-    my %regions = ('Regions' => \@region_info);
-    $et->SetNewValue(RegionInfoMP => \%regions);
+    my %region_info_mps = ('Regions' => \@region_info_mp);
+    $et->SetNewValue(RegionInfoMP => \%region_info_mps);
+    my %region_infos = ('RegionList' => \@region_info);
+    $et->SetNewValue(RegionInfo => \%region_infos);
 
     my $pre_atime = stat($full_name)->atime;
     my $pre_mtime = stat($full_name)->mtime;
