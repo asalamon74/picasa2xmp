@@ -132,6 +132,8 @@ sub add_face_info {
     $et->SetNewValue('XMP:CatalogSets' => \@people_pipe);
     $et->SetNewValue(subject => \@names);
     $et->SetNewValue(categories => create_acdsee_xml(@names));
+    $et->SetNewValue(Keywords => \@names, DelValue => 1);
+    $et->SetNewValue(Keywords => \@names, AddValue => 2);
 
     my %region_info_mps = ('Regions' => \@region_info_mp);
     $et->SetNewValue(RegionInfoMP => \%region_info_mps);
