@@ -117,6 +117,8 @@ sub add_face_info {
         my $bottom = $faces[$i]{bottom};
         my $width = $right - $left;
         my $height = $bottom - $top;
+        my $middle_x = $left + $width / 2;
+        my $middle_y = $top + $height / 2;
         push @names, "$name";
         push @people_slash, "People/$name";
         push @people_pipe, "People|$name";
@@ -124,7 +126,7 @@ sub add_face_info {
                                 PersonDisplayName => "$name")};
         push @region_info, {(Name=>"$name",
                              Type=>"Face",
-                             Area=>{(Unit=>"Normalized",X=>"$left",Y=>"$top",W=>"$width",H=>"$height")})};
+                             Area=>{(Unit=>"Normalized",X=>"$middle_x",Y=>"$middle_y",W=>"$width",H=>"$height")})};
     }
     $et->SetNewValue(LastKeywordXMP => \@people_slash);
     $et->SetNewValue(TagsList => \@people_slash);
