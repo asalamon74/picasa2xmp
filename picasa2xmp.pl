@@ -210,7 +210,7 @@ sub main {
         $total_faces_found += $ff;
         $total_faces_written += $fw;
     }
-    vprint "Total: Found $total_faces_found faces, written $total_faces_written faces";
+    print "Total: Found $total_faces_found faces, written $total_faces_written faces\n";
 }
 
 
