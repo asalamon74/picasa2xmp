@@ -164,6 +164,7 @@ sub read_picasa_ini {
     my %local_contacts;
     my $faces_found = 0;
     my $faces_written = 0;
+    my $faces_missing = 0;
     my @names;
     vprint "Processing $picasa_ini";
     open (my $fh_picasa_ini, '<', $picasa_ini) || die "Unable to open $picasa_ini file";
@@ -188,11 +189,17 @@ sub read_picasa_ini {
                 my $top = hex ($2) / (1<<16);
                 my $right = hex ($3) / (1<<16);
                 my $bottom = hex ($4) / (1<<16);
-                my $name = contact_name_by_id ($5, %local_contacts);
-                my %face = (name => $name, left => $left, top => $top, right => $right, bottom => $bottom);
-                vvprint ("  Found face for $name in $file_name");
-                push @names, { %face };
-                ++$faces_found;
+                my $contact_id = $5;
+                my $name = contact_name_by_id ($contact_id, %local_contacts);
+                if (!defined $name) {
+                    vvprint "  Missing contact info $contact_id";
+                    ++$faces_missing;
+                } else {
+                    my %face = (name => $name, left => $left, top => $top, right => $right, bottom => $bottom);
+                    vvprint ("  Found face for $name in $file_name");
+                    push @names, { %face };
+                    ++$faces_found;
+                }
                 $faces_str = $6;
             }
         }
@@ -202,7 +209,10 @@ sub read_picasa_ini {
         $faces_written += add_face_info($dir_name, $file_name, @names);
     }
     vprint "Found $faces_found faces in $picasa_ini, written $faces_written faces";
-    return ($faces_found, $faces_written);
+    if ($faces_missing>0) {
+        vprint "Fount $faces_missing faces with missing contact info";
+    }
+    return ($faces_found, $faces_written, $faces_missing);
 }
 
 sub main {
@@ -216,12 +226,14 @@ sub main {
         ->in( $dir );
     my $total_faces_found = 0;
     my $total_faces_written = 0;
+    my $total_faces_missing = 0;
     foreach my $file (@files) {
-        my ($ff, $fw) = read_picasa_ini($file);
+        my ($ff, $fw, $fm) = read_picasa_ini($file);
         $total_faces_found += $ff;
         $total_faces_written += $fw;
+        $total_faces_missing += $fm;
     }
-    print "Total: Found $total_faces_found faces, written $total_faces_written faces\n";
+    print "Total: Found $total_faces_found faces ($total_faces_missing with mising contact info), written $total_faces_written faces\n";
 }
 
 
