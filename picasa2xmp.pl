@@ -207,6 +207,10 @@ sub read_picasa_ini {
 
 sub main {
     my ($dir) = @_;
+    if (! -e "$dir" || ! -d "$dir") {
+        die "Cannor find directory $dir";
+    }
+
     my @files = File::Find::Rule->file()
         ->name( '.picasa.ini' )
         ->in( $dir );
