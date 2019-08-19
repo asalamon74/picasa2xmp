@@ -44,6 +44,11 @@ sub parse_options {
 }
 
 sub parse_contacts_xml {
+    vprint "Reading contacts file $contacts_xml";
+    if (! -e "$contacts_xml") {
+        die "Missing $contacts_xml file";
+    }
+
     my $dom = XML::LibXML->load_xml(location => $contacts_xml);
     my @contacts_array = $dom->findnodes('//contact');
 
@@ -217,8 +222,8 @@ sub main {
 
 
 parse_options();
-vprint "Starting processing $dir";
 parse_contacts_xml();
+vprint "Starting processing $dir";
 main($dir);
 __END__
 
