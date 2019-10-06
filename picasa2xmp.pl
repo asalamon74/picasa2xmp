@@ -12,6 +12,8 @@ use File::stat;
 
 Getopt::Long::Configure qw(gnu_getopt);
 
+my $man=0;
+my $help=0;
 my $verbose=0;
 my $contacts_xml;
 my $dry_run=0;
@@ -28,15 +30,20 @@ sub vvprint {
 }
 
 sub parse_options {
-    GetOptions ("c|contacts-xml=s" => \$contacts_xml,
+    GetOptions ('h|help' => \$help,
+                'm|man' => \$man,
+                'c|contacts-xml=s' => \$contacts_xml,
                 'v|verbose+' => \$verbose,
                 'n|dry-run' => \$dry_run,
                 'k|keep-time' => \$keep_time)
-        || pod2usage(2);
+        || pod2usage(-verbose => 1, -exitval=>2);
+
+    pod2usage(1) if $help;
+    pod2usage(-verbose => 2) if $man;
 
     if (not defined $contacts_xml) {
         print STDERR "Argument 'contacts-xml' is mandatory\n\n";
-        pod2usage(2);
+        pod2usage(-verbose => 1, -exitval=>2);
     }
     if (defined $ARGV[0]) {
         $dir = $ARGV[0];
@@ -236,7 +243,6 @@ sub main {
     print "Total: Found $total_faces_found faces ($total_faces_missing with mising contact info), written $total_faces_written faces\n";
 }
 
-
 parse_options();
 parse_contacts_xml();
 vprint "Starting processing $dir";
@@ -255,15 +261,23 @@ picasa2xmp.pl [options] --contacts-xml picasa_contacts.xml DIRECTORY
 
 =over 4
 
-=item B<--verbose>
+=item B<DIRECTORY>
 
-    Turns on verbose mode, the program prints out more information.
+    Specifies the directory which contains the image files. If not specified the script works on the current directory.
 
-=item B<--dry-run>
+=item B<-c|--contacts-xml>
+
+    Specifies the picasa contacts xml file. This is a mandatory option.
+
+=item B<-v|--verbose>
+
+    Turns on verbose mode, the program prints out more information. Can be specified multiple times to increase verbosity.
+
+=item B<-n|--dry-run>
 
     Perform a trial run with no changes. Useful for testing.
 
-=item B<--keep-time>
+=item B<-k|--keep-time>
 
     Keep the original dates of the files.
 
@@ -273,5 +287,9 @@ picasa2xmp.pl [options] --contacts-xml picasa_contacts.xml DIRECTORY
 
     picas2xmp reads the picasa face / contact information from .picasa.ini
     and contact.xml files and converts it to xmp tags.
+
+=head1 AUTHOR
+
+    Andras Salamon <andras.salamon@melda.info>
 
 =cut
