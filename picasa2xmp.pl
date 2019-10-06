@@ -35,7 +35,7 @@ sub parse_options {
         || pod2usage(2);
 
     if (not defined $contacts_xml) {
-        print STDERR "Argument 'contacts_xml' is mandatory\n\n";
+        print STDERR "Argument 'contacts-xml' is mandatory\n\n";
         pod2usage(2);
     }
     if (defined $ARGV[0]) {
