@@ -1,4 +1,4 @@
-**DO NOT USE IT YET, STILL WORKING ON IT**
+[![Build Status](https://travis-ci.org/asalamon74/picasa2xmp.svg?branch=master)](https://travis-ci.org/asalamon74/picasa2xmp)
 
 # picasa2xmp
 
