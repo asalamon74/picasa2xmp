@@ -18,6 +18,7 @@ my $verbose=0;
 my $contacts_xml;
 my $dry_run=0;
 my $keep_time=0;
+my $exclude_dir="\.picasaoriginals\$";
 my $dir='.';
 my %contacts;
 
@@ -35,7 +36,8 @@ sub parse_options {
                 'c|contacts-xml=s' => \$contacts_xml,
                 'v|verbose+' => \$verbose,
                 'n|dry-run' => \$dry_run,
-                'k|keep-time' => \$keep_time)
+                'k|keep-time' => \$keep_time,
+                'x|exclude-dir=s' => \$exclude_dir)
         || pod2usage(-verbose => 1, -exitval=>2);
 
     pod2usage(1) if $help;
@@ -163,7 +165,7 @@ sub add_face_info {
     return $success * $face_num;
 }
 
-sub read_picasa_ini {
+sub process_picasa_ini {
     my ($picasa_ini) = @_;
     my $dir_name = dirname($picasa_ini);
     my $in_contacts = '';
@@ -173,7 +175,13 @@ sub read_picasa_ini {
     my $faces_written = 0;
     my $faces_missing = 0;
     my @names;
-    vprint "Processing $picasa_ini";
+
+    if ($dir_name =~ /$exclude_dir/) {
+        vprint "Excluding $dir_name";
+        return (0,0,0);
+    } else {
+        vprint "Processing $picasa_ini";
+    }
     open (my $fh_picasa_ini, '<', $picasa_ini) || die "Unable to open $picasa_ini file";
 
     while (<$fh_picasa_ini>) {
@@ -236,7 +244,7 @@ sub process_dir {
     my $total_faces_written = 0;
     my $total_faces_missing = 0;
     foreach my $file (@files) {
-        my ($ff, $fw, $fm) = read_picasa_ini($file);
+        my ($ff, $fw, $fm) = process_picasa_ini($file);
         $total_faces_found += $ff;
         $total_faces_written += $fw;
         $total_faces_missing += $fm;
@@ -264,6 +272,10 @@ picasa2xmp.pl [options] --contacts-xml picasa_contacts.xml DIRECTORY
 =item B<DIRECTORY>
 
     Specifies the directory which contains the image files. If not specified the script works on the current directory.
+
+=item B<-x|--exclude-dir>
+
+    Specifies the directories (using regular expression) which should be excluded. Default value: "\.picasaoriginals$".
 
 =item B<-c|--contacts-xml>
 
