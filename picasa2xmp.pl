@@ -222,10 +222,11 @@ sub read_picasa_ini {
     return ($faces_found, $faces_written, $faces_missing);
 }
 
-sub main {
+sub process_dir {
     my ($dir) = @_;
+    vprint "Starting processing $dir";
     if (! -e "$dir" || ! -d "$dir") {
-        die "Cannor find directory $dir";
+        die "Cannot find directory $dir";
     }
 
     my @files = File::Find::Rule->file()
@@ -245,8 +246,7 @@ sub main {
 
 parse_options();
 parse_contacts_xml();
-vprint "Starting processing $dir";
-main($dir);
+process_dir($dir);
 __END__
 
 =head1 NAME
