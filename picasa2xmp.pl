@@ -293,6 +293,14 @@ picasa2xmp.pl [options] --contacts-xml picasa_contacts.xml DIRECTORY
 
     Keep the original dates of the files.
 
+=item B<-h|--help>
+
+    Prints out the help page.
+
+=item B<-m|--man>
+
+    Prints out the man page.
+
 =back
 
 =head1 DESCRIPTION
