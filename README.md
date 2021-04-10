@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/asalamon74/picasa2xmp.svg?branch=master)](https://travis-ci.org/asalamon74/picasa2xmp)
+[![Build Status](https://travis-ci.com/asalamon74/picasa2xmp.svg?branch=master)](https://travis-ci.com/asalamon74/picasa2xmp)
 
 # picasa2xmp
 
